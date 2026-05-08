@@ -6,6 +6,15 @@ Declarative DAG workflow engine for Ruflo. Describe deterministic and AI-driven 
 
 This plugin was inspired by [Archon](https://github.com/coleam00/archon), an open-source workflow engine for AI coding agents. Archon's insight — that AI-assisted development becomes deterministic and repeatable when the structure of the work is owned by a YAML file rather than improvised at runtime — shaped the design of this plugin. The DAG layout, promise-signal loop convention, and `$node.output` reference syntax are all expressions of that idea, adapted to fit Ruflo's existing agent, hook, and memory primitives.
 
+## Install
+
+```
+/plugin marketplace add ruvnet/ruflo
+/plugin install ruflo-workflows-dag@ruflo
+```
+
+Requires `ruflo-core` to be installed first.
+
 ## What it adds to Ruflo
 
 | Capability | Where it lives |
