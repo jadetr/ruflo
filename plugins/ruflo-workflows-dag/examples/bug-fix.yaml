@@ -1,0 +1,44 @@
+name: bug-fix
+description: Reproduce, classify, fix, and verify a reported bug
+provider: claude
+
+nodes:
+  - id: reproduce
+    agent: researcher
+    prompt: |
+      Read the bug report from $USER_MESSAGE. Reproduce the failure with
+      a minimal test case. Write the failing test path to
+      $ARTIFACTS_DIR/repro.txt.
+
+  - id: classify
+    depends_on: [reproduce]
+    model: haiku
+    prompt: |
+      Classify the bug as one of: regression, edge_case, integration,
+      perf. Output JSON: { "kind": "...", "severity": "low|med|high" }.
+    output_format:
+      type: object
+      properties:
+        kind:
+          type: string
+          enum: [regression, edge_case, integration, perf]
+        severity:
+          type: string
+
+  - id: fix-regression
+    depends_on: [classify]
+    when: $classify.output.kind == 'regression'
+    agent: coder
+    prompt: |
+      Run `git bisect` to find the introducing commit. Revert or patch.
+
+  - id: fix-other
+    depends_on: [classify]
+    when: $classify.output.kind != 'regression'
+    agent: coder
+    prompt: Fix the bug identified in $reproduce.output.
+
+  - id: verify
+    depends_on: [fix-regression, fix-other]
+    trigger_rule: one_success
+    bash: npm test

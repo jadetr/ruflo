@@ -1,0 +1,20 @@
+{
+  "name": "ruflo-workflows-dag",
+  "description": "Declarative DAG workflow engine — describe deterministic and AI-driven workflows in a single YAML file with depends_on, when conditionals, and AI loops",
+  "version": "0.1.0",
+  "author": {
+    "name": "ruvnet",
+    "url": "https://github.com/ruvnet"
+  },
+  "homepage": "https://github.com/ruvnet/ruflo",
+  "license": "MIT",
+  "keywords": [
+    "ruflo",
+    "workflow",
+    "dag",
+    "yaml",
+    "orchestration",
+    "deterministic",
+    "ai-workflow"
+  ]
+}

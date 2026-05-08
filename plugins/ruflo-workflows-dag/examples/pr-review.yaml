@@ -1,0 +1,38 @@
+name: pr-review
+description: Multi-perspective parallel review of a pull request
+provider: claude
+
+nodes:
+  - id: sync
+    bash: |
+      git fetch origin
+      git checkout pr-${PR_NUMBER:-HEAD}
+
+  - id: review-security
+    depends_on: [sync]
+    agent: security-auditor
+    prompt: Audit the diff for input validation, authz, and injection risks.
+
+  - id: review-performance
+    depends_on: [sync]
+    agent: perf-analyzer
+    prompt: Check the diff for hot paths, allocations, and N+1 queries.
+
+  - id: review-tests
+    depends_on: [sync]
+    agent: tester
+    prompt: Evaluate test coverage of the diff. Suggest missing cases.
+
+  - id: review-style
+    depends_on: [sync]
+    model: haiku
+    prompt: Check the diff for style, naming, and dead code.
+
+  - id: synthesize
+    depends_on: [review-security, review-performance, review-tests, review-style]
+    trigger_rule: one_success
+    agent: reviewer
+    prompt: |
+      Combine the four review reports into a single ranked feedback list
+      with severity and file/line citations. Emit a recommendation:
+      "approve", "request_changes", or "comment".

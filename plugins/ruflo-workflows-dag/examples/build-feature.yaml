@@ -1,0 +1,53 @@
+name: build-feature
+description: Plan, implement, test, review, and open a PR for a feature
+provider: claude
+model: sonnet
+
+nodes:
+  - id: plan
+    agent: researcher
+    prompt: |
+      Explore the codebase relevant to "$USER_MESSAGE" and produce an
+      implementation plan with discrete tasks. Write the plan to
+      $ARTIFACTS_DIR/plan.md.
+
+  - id: implement
+    depends_on: [plan]
+    agent: coder
+    loop:
+      prompt: |
+        Read $ARTIFACTS_DIR/plan.md. Implement the next pending task and
+        commit the changes. When every task is done, emit
+        <promise>ALL_TASKS_COMPLETE</promise>.
+      until: ALL_TASKS_COMPLETE
+      max_iterations: 20
+      fresh_context: true
+
+  - id: run-tests
+    depends_on: [implement]
+    bash: npm test
+
+  - id: review
+    depends_on: [run-tests]
+    when: $run-tests.exit_code == 0
+    agent: reviewer
+    prompt: |
+      Review the diff against $ARTIFACTS_DIR/plan.md. Report blocking
+      issues with file paths and line numbers.
+
+  - id: approve
+    depends_on: [review]
+    loop:
+      prompt: |
+        Present the proposed changes for human review. Address feedback
+        from $LOOP_USER_INPUT. Emit <promise>APPROVED</promise> when the
+        reviewer types "approve".
+      until: APPROVED
+      interactive: true
+      gate_message: Type "approve" to merge, or describe a change to make.
+
+  - id: open-pr
+    depends_on: [approve]
+    bash: |
+      git push -u origin HEAD
+      gh pr create --fill
